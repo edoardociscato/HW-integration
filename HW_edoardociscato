@@ -1,0 +1,115 @@
+module HW_int
+
+
+	# question 1 b) 
+	# here are the packages I used
+
+	using FastGaussQuadrature
+	using Roots
+	using Sobol
+	using PyPlot
+	using Distributions
+
+	# here are some functions I defined for useage 
+	# in several sub questions
+
+	# demand function
+
+	demand(p)=2/sqrt(p) 
+	invdem(q)=4/q^2 # inverse demand function
+
+	# gauss-legendre adjustment factors for map change
+
+	mapadj(a,b,x)=(x.*(b-a))/2+(a+b)/2
+
+	# eqm condition for question 2
+	# this is the equilibrium condition: total demand = supply, 
+
+
+	# weighted sum for integration from the slides.
+	
+
+	function question_1b(n)
+	p0=1
+	p1=4
+	a=min(invdem(p0),invdem(p1))
+	b=max(invdem(p0),invdem(p1))
+	(nodes,w)=gausslegendre(n)
+	adjnodes=mapadj(a,b,nodes)
+	int=((b-a)/2)*sum(w.*map(invdem,adjnodes))
+	change=int-abs(a-b)*min(p0,p1)
+	figure()
+	title("1b")
+	p=scatter(adjnodes,w.*map(invdem,adjnodes))
+	res=string("Surplus loss: ", change, " computed with Gauss-legendre rule, with", n, " nodes.")
+	println(res)
+	end
+
+
+	function question_1c(n)
+	p0=1
+	p1=4
+	a=min(invdem(p0),invdem(p1))
+	b=max(invdem(p0),invdem(p1))
+	interval=Uniform(a,b)
+	nodes=rand(interval,n)
+	int=(b-a)*sum(map(invdem,nodes))/n
+	change=int-abs(a-b)*min(p0,p1)
+	figure()
+	title("1c")
+	p=scatter(nodes,map(invdem,nodes)/n)
+	res=string("Surplus loss: ", change, " computed with monte-carlo method, with", n, " nodes.")
+	end
+
+
+	function question_1d(n)
+	p0=1
+	p1=4
+	a=min(invdem(p0),invdem(p1))
+	b=max(invdem(p0),invdem(p1))
+	s=SobolSeq(1,a,b)
+	nodes=hcat([next(s) for i = 1:n]...)'
+	int=(b-a)*sum(map(invdem,nodes))/n
+	change=int-abs(a-b)*min(p0,p1)
+	figure()
+	title("1d")
+	p=scatter(nodes,map(invdem,nodes)/n)
+	res=string("Surplus loss: ", change, " computed with pseudo monte-carlo method, with", n, " nodes.")
+	end
+
+
+	function question_2a(n)
+	mu=[0 0]
+	Sigma=[[0.02 0.01],[0.01 0.01]]
+	sigma=diag(transpose(chol(Sigma)))
+	nodes,w=gausshermite(n)
+	adjnodes1=sqrt(2)*sigma[1]*nodes
+	adjnodes2=sqrt(2)*sigma[2]*nodes
+	W=kron(w,w)
+	Nodes=[repmat(adjnodes1,n) kron(adjnodes2,ones(n,1))]
+	println("I didn't complete the exercise (I didn't get if I need to use a multivariate normal in this case).")
+	end
+
+
+	function question_2b(n)
+	println("I didn't answer this question.")
+	end	
+
+
+	# function to run all questions
+	function runall(n=10)
+		println("running all questions of HW-integration:")
+		println("The analytical solution is: surplus loss = 11.25")
+		question_1b(n)	# make sure your function prints some kind of result!
+		question_1c(n)
+		question_1d(n)
+		println("")
+		println("results of question 2:")
+		q2 = question_2a(n)
+		println(q2)
+		q2b = question_2b(n)
+		println(q2b)
+		println("end of HW-integration")
+	end
+
+end
